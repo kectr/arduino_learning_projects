@@ -1,30 +1,32 @@
-int y[2] = {2, 3};
-int x[4] = {4, 5, 6, 7}; //y+ ,x -
-int len_x = 4;
-int len_y = 2;
-int xtype = 0;
-int ytype = 1;
-int leds[4][2];
+int y[2] = { 4, 5 };
+int x[2] = { 2, 3 };  //y+ ,x -
+const int len_x = sizeof(x) / sizeof(x[0]);
+const int len_y = sizeof(y) / sizeof(y[0]);
+const int xtype = 1;
+const int ytype = !xtype;
+int leds[len_x][len_x];
 
 
 void slide_screen() {
   for (int i = 0; i < len_x; i++) {
     for (int j = 0; j < len_y; j++) {
-      if(i!=0){
-        leds[i-1][j] = leds[i][j];
-      } 
+      if (i != 0) {
+        leds[i - 1][j] = leds[i][j];
+      }
     }
   }
-  leds[3] = {0,0};s
 }
+
 
 void display_screen(int t) {
   for (int i = 0; i < len_x; i++) {
     for (int j = 0; j < len_y; j++) {
-      if (leds[i][j]) {
+      if (leds[i][j] == 1) {
         display_led(i, j, t);
       } else {
-        delay(2*t);
+        digitalWrite(x[i], !xtype);
+        digitalWrite(y[j], !ytype);
+        delay(2 * t);
       }
     }
   }
@@ -45,26 +47,23 @@ void prepare_pins() {
   }
 }
 
-void display_led(int i, int j,int t) {
-  digitalWrite(x[i], 0);
-  digitalWrite(y[j], 1);
+void display_led(int i, int j, int t) {
+  digitalWrite(x[i], xtype);
+  digitalWrite(y[j], ytype);
   delay(t);
-  digitalWrite(x[i], 1);
-  digitalWrite(y[j], 0);
+  digitalWrite(x[i], !xtype);
+  digitalWrite(y[j], !ytype);
   delay(t);
 }
 
 
 void setup() {
   prepare_pins();
-  leds[3][0] = 1;
+  leds[1, 1];
   display_screen(100);
-  delay(200);
   slide_screen();
-  delay(200);
   display_screen(100);
 }
 
 void loop() {
-  
 }
