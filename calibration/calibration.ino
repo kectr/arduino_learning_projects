@@ -1,4 +1,5 @@
 #include "MPU9250.h"
+#include <Wire.h>
 
 MPU9250 mpu;
 

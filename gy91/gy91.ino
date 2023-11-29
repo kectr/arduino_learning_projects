@@ -4,7 +4,6 @@ MPU9250 mpu; // You can also use MPU9255 as is
 
 void setup()
 {
-  digitalWrite(26,1);
   Serial.begin(115200);
   Wire.begin();
   delay(500);
@@ -22,12 +21,12 @@ void loop()
   if (mpu.update())
   {
     Serial.print("Yaw: ");
-    Serial.print(int(mpu.getYaw()));
+    Serial.print((mpu.getYaw()));
 
     Serial.print("  Pitch: ");
-    Serial.print(int(mpu.getPitch()));
+    Serial.print((mpu.getPitch()));
     
     Serial.print("  Roll: ");
-    Serial.println(int(mpu.getRoll()));
+    Serial.println((mpu.getRoll()));
   }
 }
