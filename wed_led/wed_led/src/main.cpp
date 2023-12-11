@@ -2,30 +2,29 @@
 
 //Define
 #define data0 2
-#define data1 3
-#define data2 4
-#define data3 5
 #define clock 5
 #define reset 6
+#define oe 7
 
-#define button_u 7
-#define button_d 8
-#define button_r 9
-#define button_l 10
-#define button_m 11
+
 
 #define buzzer 12
 
-#define pulsetime_micro 10
+const uint8_t pulsetime_micro = 10;
 
 const uint8_t rowNumber = 16;
 const uint8_t columnNumber = 64;
+const uint8_t oe_delay_micro = 255;
 
+uint8_t screen[128] = {0x00};
 
 //Declarations
 void clock_pulse();
+void output_enable();
 void data_out_from_pin(uint8_t data_pin,uint8_t data);
-void list_out(uint8_t data_pin,uint8_t list[]);
+void list_out(uint8_t data_pin,uint8_t data_list[],uint8_t data_last_index);
+void row_out(uint8_t data_pin, uint8_t screen_list[], uint8_t row_index);
+void screen_out(uint8_t data_pin,uint8_t screen_list[]);
 
 
 void setup() {
@@ -48,6 +47,13 @@ void clock_pulse(){
     delayMicroseconds(pulsetime_micro);
 }
 
+//Not sure about how it work still in progress.
+void output_enable(){
+    digitalWrite(oe,1);
+    delayMicroseconds(oe_delay_micro);
+    digitalWrite(oe,0);
+}
+
 //Just a reminder for bit operations.
 /*
 byte readBit(byte value, uint8_t position) {
@@ -55,7 +61,7 @@ byte readBit(byte value, uint8_t position) {
 }
 */
 
-//Puts some data to pin by shifting every bit and usind & operator.
+//Puts some data ( ex : 0xff ) to pin by shifting every bit and usind & operator.
 void data_out_from_pin(uint8_t data_pin,uint8_t data){
     uint8_t i = 0;
     for(;i<8;i++){
@@ -66,36 +72,48 @@ void data_out_from_pin(uint8_t data_pin,uint8_t data){
 }
 
 //Puts list to pin by using data_out_from_pin function.
-void list_out(uint8_t data_pin,uint8_t list[],uint8_t last_index_of_list){
-    for(;last_index_of_list >= 0;last_index_of_list--){
-        data_out_from_pin(data_pin,list[last_index_of_list]);
+void list_out(uint8_t data_pin,uint8_t data_list[],uint8_t data_last_index){
+    for(;data_last_index >= 0;data_last_index--){
+        data_out_from_pin(data_pin,data_list[data_last_index]);
     }
 }
 
-/*
-Puting list with 1/4 scan rate 
-it means putting 1/4 of screen at same time
-Using list_out function for this operation
-Puting data through at the number of pins such as 1/4 of row number.
-*/
+//Trying to export row data with list_out func. Row data includes row info and pixel data. Funciton will be configurated after led formation of led panel. 
+void row_out(uint8_t data_pin, uint8_t screen_list[], uint8_t row_index){
+    uint8_t row_info[2] = {0x00,0x00};
 
-/*
-uint8_t *find_row_info(uint8_t row){
-    uint8_t *listofinfo[2] = {0x00};
+    /*
+    if(row_index<8){
+        row_info[1] = 0x01;
+        row_info[1]<<=row_index;
+    }else{
+        row_info[0] = 0x01;
+        row_info[0]<<=(row_index-8);
+    }
+    */
+
+    uint8_t i = row_index/8;
+    uint8_t j = row_index%8;
+    row_info[i] = 0x01;
+    row_info[i]<<=j;
+    uint8_t list_last_index = columnNumber/16-1;
+    uint8_t list_index = row_index*columnNumber+columnNumber/16;
     
-    
+    list_out(data_pin,&screen_list[list_index],list_last_index);//puts data (columNnumber/16 comes from 2 panel form,normaly it has to be 8)
+    list_out(data_pin,row_info,1);//puts row info
+    list_out(data_pin,&screen_list[list_index-columnNumber/16],list_last_index);
+    list_out(data_pin,row_info,1);
 }
 
-//Putting row_data[10] into data pin to put 1 row to screen with using list_out function.First 2 element is row info.
-
-
-void screen_row_out(uint8_t data_pin,uint8_t row,uint8_t data[]){
-    uint8_t row_data[10];
-    
-    
-
-
-
+//Printing screen to led by use of row_out function.(Respected to 1/4 scan)
+void screen_out(uint8_t data_pin,uint8_t screen_list[]){
+    uint8_t row = 0;
+    for(;row<4;row++){
+        for(uint8_t i = 0;i<4;i++){
+            row_out(data_pin,screen_list,row+i);
+        }
+        output_enable();
+    }
 }
-*/
+
 
