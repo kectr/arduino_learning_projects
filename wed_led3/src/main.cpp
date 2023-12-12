@@ -142,6 +142,7 @@ void draw_rectangle(uint8_t x1,uint8_t x2,uint8_t y1,uint8_t y2,uint8_t data){
     draw_vertical_line(x2,y1,y2,data);
 }
 
+
 //Just a reminder for bit operations.
 
 byte readBit(byte value, uint8_t position) {
