@@ -1,15 +1,14 @@
 #include <Arduino.h>
 
+const uint8_t clock = 8;
+const uint8_t sclock = 9;
+const uint8_t oe = 9; // select it pwm for brightness
+const uint8_t A = 3;
+const uint8_t B = 2;
+const int8_t data_pin = 10;
 
-const uint8_t clock = 2;
-const uint8_t sclock = 3;
-const uint8_t oe = 4; // select it pwm for brightness
-const uint8_t A = 5;
-const uint8_t B = 6;
-const int8_t data_pin = 7;
 
-
-const uint8_t pulsetime_micro = 1000;
+const uint8_t pulsetime_micro = 10;
 
 
 const uint8_t rowNumber = 16; 
@@ -17,54 +16,76 @@ const uint8_t columnNumber = 64;
 uint8_t screen[rowNumber][columnNumber] = {1}; //clear screen is all ones
 
 
+
 void clock_pulse();
 void sclock_pulse();
 void data_out(uint8_t data);
-void rows_out(uint8_t i_row);
-void screen_out();
+void rows_out(int i_row);
+void screen_clear();
 
 
 
 
 void setup() {
+    Serial.begin(9600);
     pinMode(clock,OUTPUT);
     pinMode(sclock,OUTPUT);
     pinMode(oe,OUTPUT);
     pinMode(A,OUTPUT);
     pinMode(B,OUTPUT);
     pinMode(data_pin,OUTPUT);
+    Serial.println("Start");
+    digitalWrite(clock,0);
+    digitalWrite(sclock,0);
+    digitalWrite(A,0);
+    digitalWrite(B,1);
+    screen_clear();
+    delay(500);
+    for(int row = 0;row<16;row++){
+        for(int column; column<32;column++){
+            screen[row][column] = 0;
 
-    analogWrite(oe,255);//brighness (0-255)
+        }
+        for(int column = 32; column<64;column++){
+            screen[row][column] = 1;
+
+        }
+        
+
+    }
 
 }
   
-
-void loop() {
+void loop(){
+    rows_out(0);
 
 }
 
-
 void clock_pulse(){
+    
+    delayMicroseconds(pulsetime_micro);
     digitalWrite(clock,1);
+    
     delayMicroseconds(pulsetime_micro);
     digitalWrite(clock,0);
-    delayMicroseconds(pulsetime_micro);
 }
 
 void sclock_pulse(){
+
+    delayMicroseconds(pulsetime_micro);
     digitalWrite(sclock,1);
+
     delayMicroseconds(pulsetime_micro);
     digitalWrite(sclock,0);
-    delayMicroseconds(pulsetime_micro);
 }
 
 void data_out(uint8_t data){
-    digitalWrite(data_pin,data);
+    digitalWrite(data_pin,data&1);
     clock_pulse();
 }
 
-void rows_out(uint8_t i_row){
-
+void rows_out(int i_row){
+    
     switch (i_row)
     {
     case 0:
@@ -84,31 +105,31 @@ void rows_out(uint8_t i_row){
         digitalWrite(A,1);
         digitalWrite(B,1);
         break;
+    default:
+        break;
     }
+    
 
-    for(uint8_t laps = 0; laps <8 ; laps ++){
-        for(uint8_t row_index = i_row + 12 ; row_index >=0 ; row_index-=4){
-            for(uint8_t bit_index = 0; bit_index <8 ; bit_index ++){
-                    data_out(screen[row_index][laps*8+bit_index]);
-                }
+    for(int lap = 0;lap<8;lap++){
+        for(int column = 0; column<8;column ++){
+            for(int row = 12; row >=0 ; row-=4){
+                data_out(screen[row][column+lap*8]);
+            }
         }
-    }
-
-    sclock_pulse();
+    }   
 }
 
-void screen_out(){
-    for(uint8_t i_row = 0; i_row<4 ; i_row ++){
-        rows_out(i_row);
+
+
+
+void screen_clear(){
+    for (int i = 0 ;i<256; i++ ){
+        data_out(1);
     }
 }
 
-void screen_clear(uint8_t data){
-    for(uint8_t i = 0; i < rowNumber; i++){
-        for(uint8_t j = 0 ; j < columnNumber ; j ++ ){
-            screen[i][j] = data;
-        }
-    }
+void change_dot(uint8_t index){
+    
 }
 
 
@@ -158,9 +179,6 @@ void draw_shape(uint8_t data[],uint8_t top_right_x,uint8_t top_right_y,uint8_t h
     }
 }
 
-void calculate_start_cordinates(uint8_t ){
-
-}
 
 
 ///////screen arayinin tek boyutlu yapmalıyım çünkü herhangibir data için gerekli olan bilginin konumunun bir kare içerisine alınıp hesaplanması ve bu hesaba göre içeri bir şey yazdırılması işlemi için gerekli olan verileri iki boyulu arayde işlemek sıkıntılı olabiliyor.
